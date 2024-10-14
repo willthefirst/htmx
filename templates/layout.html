@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}HTMX App{% endblock %}</title>
     <script src="https://unpkg.com/htmx.org@1.9.2"></script>
-</head>
-<body>
+  </head>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <body class="container">
     <nav>
-        <a href="/" hx-get="/" hx-target="#content">Home</a>
-        <a href="/contacts" hx-get="/contacts" hx-target="#content">Contacts</a>
+      <a href="/">Home</a>
+      <a href="/contacts">Contacts</a>
     </nav>
 
-    <main id="content">
-        {% block content %}
-        {% endblock %}
-    </main>
-</body>
+    <main id="content">{% block content %} {% endblock %}</main>
+  </body>
 </html>
