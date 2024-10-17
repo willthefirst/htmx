@@ -7,16 +7,18 @@
       content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}HTMX App{% endblock %}</title>
     <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
   </head>
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
-  <body class="container">
+  <body
+    id="main"
+    class="container"
+    hx-boost="true">
     <nav>
       <a href="/">Home</a>
       <a href="/contacts">Contacts</a>
     </nav>
-
-    <main id="content">{% block content %} {% endblock %}</main>
+    <main>{% block content %}{% endblock %}</main>
   </body>
 </html>

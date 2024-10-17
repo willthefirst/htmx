@@ -2,6 +2,7 @@ from flask import Flask, redirect, request, render_template, flash
 
 app = Flask(__name__)
 app.secret_key = 'wills_secret_key'
+
 class Contact:
     contacts = []
     next_id = 1
@@ -45,10 +46,18 @@ class Contact:
             if hasattr(self, key):
                 setattr(self, key, value)
         return True
+    
+    def validate(self):
+        if self.email == "error@example.com":
+            self.errors["email"] = "Bad email"
+        else:
+            self.errors.clear()
 
     @classmethod
-    def all(cls):
-        return cls.contacts
+    def all(cls, page=1, per_page=10):
+        start = (page - 1) * per_page
+        end = start + per_page
+        return cls.contacts[start:end]
 
     @classmethod
     def search(cls, query):
@@ -71,22 +80,52 @@ class Contact:
             return True
         return False
     
-# Instantiate some members of the Contact class
-contact1 = Contact(first_name="John", last_name="Doe", phone="123-456-7890",  email="john.doe@example.com")
-contact2 = Contact(first_name="Jane", last_name="Smith", email="jane.smith@example.com")
-contact3 = Contact(first_name="Alice", last_name="Johnson", phone="098-765-4321", email="alice.johnson@example.com")
+# List of contact information
+contacts_data = [
+    {"first_name": "John", "last_name": "Doe", "phone": "123-456-7890", "email": "john.doe@example.com"},
+    {"first_name": "Jane", "last_name": "Smith", "email": "jane.smith@example.com"},
+    {"first_name": "Alice", "last_name": "Johnson", "phone": "098-765-4321", "email": "alice.johnson@example.com"},
+    {"first_name": "Bob", "last_name": "Williams", "phone": "555-123-4567", "email": "bob.williams@example.com"},
+    {"first_name": "Emma", "last_name": "Brown", "email": "emma.brown@example.com"},
+    {"first_name": "Michael", "last_name": "Davis", "phone": "777-888-9999", "email": "michael.davis@example.com"},
+    {"first_name": "Olivia", "last_name": "Miller", "phone": "111-222-3333", "email": "olivia.miller@example.com"},
+    {"first_name": "David", "last_name": "Wilson", "email": "david.wilson@example.com"},
+    {"first_name": "Sophia", "last_name": "Moore", "phone": "444-555-6666", "email": "sophia.moore@example.com"},
+    {"first_name": "James", "last_name": "Taylor", "email": "james.taylor@example.com"},
+    {"first_name": "Emily", "last_name": "Anderson", "phone": "888-999-0000", "email": "emily.anderson@example.com"},
+    {"first_name": "William", "last_name": "Thomas", "email": "william.thomas@example.com"},
+    {"first_name": "Ava", "last_name": "Jackson", "phone": "222-333-4444", "email": "ava.jackson@example.com"},
+    {"first_name": "Daniel", "last_name": "White", "phone": "666-777-8888", "email": "daniel.white@example.com"},
+    {"first_name": "Mia", "last_name": "Harris", "email": "mia.harris@example.com"},
+    {"first_name": "Joseph", "last_name": "Martin", "phone": "999-000-1111", "email": "joseph.martin@example.com"},
+    {"first_name": "Charlotte", "last_name": "Thompson", "email": "charlotte.thompson@example.com"},
+    {"first_name": "Christopher", "last_name": "Garcia", "phone": "333-444-5555", "email": "christopher.garcia@example.com"},
+    {"first_name": "Amelia", "last_name": "Martinez", "phone": "777-666-5555", "email": "amelia.martinez@example.com"},
+    {"first_name": "Andrew", "last_name": "Robinson", "email": "andrew.robinson@example.com"}
+]
 
-contact1.save()
-contact2.save()
-contact3.save()
+# Create and save contacts using a loop
+for data in contacts_data:
+    contact = Contact(**data)
+    contact.save()
                 
 @app.route("/")
 def index():
     return redirect("/contacts")
 
-@app.route("/contacts")
+@app.route("/contacts", methods=["GET"])
 def contacts():
     search = request.args.get("q")
+    page = int(request.args.get("page", 1))
+    if search is not None:
+        contacts_set = Contact.search(search)
+    else:
+        contacts_set = Contact.all(page)    
+    return render_template("index.html", contacts=contacts_set, page=page)
+
+@app.route("/contacts", methods=["POST"])
+def contacts_post():
+    search = request.form["q"]
     if search is not None:
         contacts_set = Contact.search(search)
     else:
@@ -146,9 +185,16 @@ def contacts_edit_post(contact_id=0):
         return redirect("/contacts/" + str(contact_id))
     else:
         return render_template('edit.html', contact = c)
+    
+@app.route("/contacts/<contact_id>/email", methods=["GET"])
+def contacts_email_get(contact_id=0):
+    c = Contact.find(contact_id)
+    c.email = request.args.get("email")
+    c.validate()
+    return c.errors.get("email") or ""
 
-@app.route("/contacts/<contact_id>/delete", methods=["POST"])
+@app.route("/contacts/<contact_id>", methods=["DELETE"])
 def contacts_delete(contact_id=0):
     Contact.delete(contact_id) 
     flash("Deleted Contact!")
-    return redirect("/contacts")
+    return redirect("/contacts", 303)
