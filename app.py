@@ -80,6 +80,10 @@ class Contact:
             return True
         return False
     
+    @classmethod
+    def count(cls):
+        return len(cls.contacts)
+    
 # List of contact information
 contacts_data = [
     {"first_name": "John", "last_name": "Doe", "phone": "123-456-7890", "email": "john.doe@example.com"},
@@ -119,9 +123,17 @@ def contacts():
     page = int(request.args.get("page", 1))
     if search is not None:
         contacts_set = Contact.search(search)
+        if request.headers.get('HX-Trigger') == 'search':
+            print(contacts_set)
+            return render_template("rows.html", contacts=contacts_set)
     else:
         contacts_set = Contact.all(page)    
     return render_template("index.html", contacts=contacts_set, page=page)
+
+@app.route("/contacts/count")
+def contacts_count():
+    count = Contact.count()
+    return "(" + str(count) + " total Contacts)"
 
 @app.route("/contacts", methods=["POST"])
 def contacts_post():
@@ -196,5 +208,22 @@ def contacts_email_get(contact_id=0):
 @app.route("/contacts/<contact_id>", methods=["DELETE"])
 def contacts_delete(contact_id=0):
     Contact.delete(contact_id) 
-    flash("Deleted Contact!")
-    return redirect("/contacts", 303)
+    if request.headers.get('HX-Trigger') == 'delete-btn':
+        flash("Deleted Contact!")
+        return redirect("/contacts", 303)
+    else:
+        return ""
+    
+@app.route("/contacts", methods=["DELETE"])
+def contacts_delete_all():
+    contact_ids = [
+        id
+        for id in request.form.getlist("selected_contact_ids")
+    ]
+    for contact_id in contact_ids:
+        print(contact_id)
+        print(Contact.delete(contact_id))
+    flash("Deleted contacts!")
+    contacts_set = Contact.all()
+    return render_template("index.html", contacts=contacts_set, page=0)
+    
