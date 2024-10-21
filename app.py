@@ -1,5 +1,7 @@
 from flask import Flask, redirect, request, render_template, flash
 
+from archiver import Archiver
+
 app = Flask(__name__)
 app.secret_key = 'wills_secret_key'
 
@@ -84,6 +86,7 @@ class Contact:
     def count(cls):
         return len(cls.contacts)
     
+    
 # List of contact information
 contacts_data = [
     {"first_name": "John", "last_name": "Doe", "phone": "123-456-7890", "email": "john.doe@example.com"},
@@ -128,7 +131,7 @@ def contacts():
             return render_template("rows.html", contacts=contacts_set)
     else:
         contacts_set = Contact.all(page)    
-    return render_template("index.html", contacts=contacts_set, page=page)
+    return render_template("index.html", contacts=contacts_set, page=page, archiver=Archiver.get())
 
 @app.route("/contacts/count")
 def contacts_count():
@@ -227,3 +230,14 @@ def contacts_delete_all():
     contacts_set = Contact.all()
     return render_template("index.html", contacts=contacts_set, page=0)
     
+@app.route("/contacts/archive", methods=["POST"])
+def start_archive():
+    archiver = Archiver.get()
+    print(archiver)
+    archiver.run()
+    return render_template("archive_ui.html", archiver=archiver)
+
+@app.route("/contacts/archive", methods=["GET"])
+def get_archive():
+    archiver = Archiver.get()
+    return render_template("archive_ui.html", archiver=archiver)
